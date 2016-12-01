@@ -23,7 +23,14 @@ var finishedUpgradeIds; // 2
 var treasuryItems = {}; // 4
 var allUpgrades = []; // 8
 
-var storedData = require(dataFile); // {upgradeVotes: {userId: upgradeId}, queuedUpgrade: {id: upgradeId, votes: voteNumber}, sentInitialUpgradeReminder: [targetId]}
+var storedData = require(dataFile);
+//	{
+//	upgradeVotes: {userId: upgradeId}, 
+//	queuedUpgrade: {id: upgradeId, votes: voteNumber}, 
+//	sentInitialUpgradeReminder: [targetId],
+//	settings: {sendReminders: bool, "postMotd": channelId},
+//	motd: motdString
+//	}
 
 var availableUpgrades = [];
 var affordableUpgrades = [];
@@ -121,7 +128,7 @@ function getVoteCount() {
 	return voteCount;
 }
 function remindForQueuedUpgrade(reminderTargets) {
-	if(storedData.queuedUpgrade["id"] != -1 && upgradeReminderTargetIds.length != 0) {
+	if(storedData.queuedUpgrade["id"] != -1 && upgradeReminderTargetIds.length != 0 && storedData.settings["sendReminders"]) {
 		var upgrade;
 		for (var i = 0; i < affordableUpgrades.length; i++) {
 			if(affordableUpgrades[i]["id"] == storedData.queuedUpgrade["id"]) {
@@ -319,12 +326,19 @@ function useData() {
 		affordableUpgradesTableStringArray = tableStringFromUpgradeList(affordableUpgrades);
 		expensiveUpgradesTableStringArray = tableStringFromUpgradeList(expensiveUpgrades);
 		checkVotedUpgrade();
+		if(guildData.motd != storedData.motd) {
+			storedData.motd = guildData.motd;
+			saveData();
+			if(storedData.settings["motdChannel"] != "" && guildObject.channels.has(storedData.settings["motdChannel"]) ) {
+				guildObject.channels[storedData.settings["motdChannel"]].sendMessage(storedData.motd)
+			}
+		}
 		usingData = false;
 	}
 }
 
 bot.on("message", function(message) {
-	if( message.content.startsWith("!guild") && message.author != bot.user ) {
+	if( message.content.startsWith("!guild") && message.author != bot.user && (message.channel.type != "text" || message.channel.permissionsFor(bot.user).hasPermission("SEND_MESSAGES") ) ) {
 		if( guildObject.member(message.author)!=null && guildObject.member(message.author).roles.has(guildMemberRoleId) ) {
 			if(message.content == "!guild favor") {
 				message.channel.sendMessage("Current Favor: **" + guildData["favor"] + "** of 6000");
@@ -393,6 +407,17 @@ bot.on("message", function(message) {
 				helpMessage += "                          Only affordable upgrades are shown.\n";
 				helpMessage += "```"
 				message.author.sendMessage(helpMessage)
+			} else if(message.content == "!guild motd") {
+				message.channel.sendMessage(guildData["motd"])
+			} else if(message.content == "!guild motdChannel" && message.channel.type == "text") {
+				if(storedData.settings["motdChannel"] != message.channel.id) {
+					storedData.settings["motdChannel"] = message.channel.id
+					message.channel.sendMessage("Messages of the day will be posted to #" + message.channel.name)
+				} else {
+					storedData.settings["motdChannel"] = ""
+					message.channel.sendMessage("Messages of the day have been disabled")
+				}
+				saveData();	
 			}
 		} else {
 			message.reply("You're not in the guild");
