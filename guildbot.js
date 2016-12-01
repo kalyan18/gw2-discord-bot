@@ -89,12 +89,20 @@ function tableStringFromUpgradeList(upgradeList) {
 	return tableStringArray;
 }
 
+var writingData = false;
 function saveData() {
-	fs.writeFile( dataFile, JSON.stringify( storedData ), "utf8", function(err) {
-		if(err) {
-			return console.log(err);
-		}
-	});
+	if(writingData) {
+		setTimeout(saveData, 1000*10)
+	} else {
+		writingData = true;
+		fs.writeFile( dataFile, JSON.stringify( storedData ), "utf8", function(err) {
+			if(err) {
+				console.log(err);
+			} else {
+				writingData = false;
+			}
+		});
+	}
 }
 function upgradeNameForId(upgradeId) {
 	var upgrade = upgradeForId(upgradeId);
@@ -190,7 +198,6 @@ function checkVotedUpgrade() {
 			storedData.queuedUpgrade = winningUpgrades[0]
 		}
 	}
-	saveData();
 
 	if( _.difference(upgradeReminderTargets, storedData.sentInitialUpgradeReminder) != [] ) {
 		remindForQueuedUpgrade( _.difference(upgradeReminderTargets, storedData.sentInitialUpgradeReminder) );
@@ -336,11 +343,11 @@ function useData() {
 		checkVotedUpgrade();
 		if(guildData.motd != storedData.motd) {
 			storedData.motd = guildData.motd;
-			saveData();
 			if(storedData.settings["motdChannel"] != "" && guildObject.channels.has(storedData.settings["motdChannel"]) ) {
 				guildObject.channels.get(storedData.settings["motdChannel"]).sendMessage(storedData.motd)
 			}
 		}
+		saveData();
 		usingData = false;
 	}
 }
@@ -445,7 +452,6 @@ bot.on('ready', () => {
 
 function startup() {
 	if(bot.guilds.get(serverId)!=null) {
-		console.log("Started running")
 		guildObject = bot.guilds.get(serverId);
 		guildMemberRoleId = guildObject.roles.find("name", guildMemberRoleString).id;
 		for(var targetIndex in upgradeReminderTargetIds) {
