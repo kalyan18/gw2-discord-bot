@@ -201,71 +201,79 @@ function loadData() {
 	guildRequest("guild/" + guildId, function (error, response, body) {
 		if (!error && response.statusCode == 200) {
 			guildData = JSON.parse(body);
-			loadedRequests = loadedRequests | 1;
-			useData();
+			if(guildData) {
+				loadedRequests = loadedRequests | 1;
+				useData();
+			}
 		}
 	});
 	guildRequest("guild/" + guildId + "/upgrades", function (error, response, body) {
 		if (!error && response.statusCode == 200) {
 			finishedUpgradeIds = JSON.parse(body);
-			loadedRequests = loadedRequests | 2;
+			if(finishedUpgradeIds) {
+				loadedRequests = loadedRequests | 2;
 
-			maxAetherium = 500;
-			if(_.contains(finishedUpgradeIds, 546)) {
-				maxAetherium = 25000;
-			} else if(_.contains(finishedUpgradeIds, 301)) {
-				maxAetherium = 15000;
-			} else if(_.contains(finishedUpgradeIds, 486)) {
-				maxAetherium = 10000;
-			} else if(_.contains(finishedUpgradeIds, 120)) {
-				maxAetherium = 5000;
-			} else if(_.contains(finishedUpgradeIds, 310)) {
-				maxAetherium = 3000;
-			} else if(_.contains(finishedUpgradeIds, 331)) {
-				maxAetherium = 1500;
+				maxAetherium = 500;
+				if(_.contains(finishedUpgradeIds, 546)) {
+					maxAetherium = 25000;
+				} else if(_.contains(finishedUpgradeIds, 301)) {
+					maxAetherium = 15000;
+				} else if(_.contains(finishedUpgradeIds, 486)) {
+					maxAetherium = 10000;
+				} else if(_.contains(finishedUpgradeIds, 120)) {
+					maxAetherium = 5000;
+				} else if(_.contains(finishedUpgradeIds, 310)) {
+					maxAetherium = 3000;
+				} else if(_.contains(finishedUpgradeIds, 331)) {
+					maxAetherium = 1500;
+				}
+				useData();
 			}
-			useData();
 		}
 	});
 	guildRequest("guild/" + guildId + "/treasury", function (error, response, body) {
 		if (!error && response.statusCode == 200) {
 			var fullTreasury = JSON.parse(body);
-			for (var i = fullTreasury.length - 1; i >= 0; i--) {
-				treasuryItems[fullTreasury[i]["item_id"]] = fullTreasury[i]["count"];
+			if(fullTreasury) {
+				for (var i = fullTreasury.length - 1; i >= 0; i--) {
+					treasuryItems[fullTreasury[i]["item_id"]] = fullTreasury[i]["count"];
+				}
+				loadedRequests = loadedRequests | 4;
+				useData();
 			}
-			loadedRequests = loadedRequests | 4;
-			useData();
 		}
 	});
 	guildRequest("guild/upgrades", function (error, response, body) {
 		if (!error && response.statusCode == 200) {
 			var allUpgradeIds = JSON.parse(body);
-			var upgradeIdStrings = [];
-			var allUpgradesLoading = [];
-			for (var i = 0; i < allUpgradeIds.length; i+=199) {
-				var slice;
-				if (allUpgradeIds.length - i <= 199) {
-					slice = allUpgradeIds.slice(i);
-				} else {
-					slice = allUpgradeIds.slice(i, i+199)
-				}
-				upgradeIdStrings.push(slice.join());
-			}
-
-			var loadedUpgradeRequestCount = 0;
-			for (var i = 0; i < upgradeIdStrings.length; i++) {
-				guildRequest("guild/upgrades?ids="+upgradeIdStrings[i], function (error, response, body) {
-					if (!error && response.statusCode == 200) {
-						upgradeChunk = JSON.parse(body)
-						allUpgradesLoading = allUpgradesLoading.concat(upgradeChunk);
-						loadedUpgradeRequestCount++;
-						if(loadedUpgradeRequestCount == upgradeIdStrings.length) {
-							allUpgrades = allUpgradesLoading;
-							loadedRequests = loadedRequests | 8;
-							useData();
-						}
+			if(allUpgradeIds) {
+				var upgradeIdStrings = [];
+				var allUpgradesLoading = [];
+				for (var i = 0; i < allUpgradeIds.length; i+=199) {
+					var slice;
+					if (allUpgradeIds.length - i <= 199) {
+						slice = allUpgradeIds.slice(i);
+					} else {
+						slice = allUpgradeIds.slice(i, i+199)
 					}
-				});
+					upgradeIdStrings.push(slice.join());
+				}
+
+				var loadedUpgradeRequestCount = 0;
+				for (var i = 0; i < upgradeIdStrings.length; i++) {
+					guildRequest("guild/upgrades?ids="+upgradeIdStrings[i], function (error, response, body) {
+						if (!error && response.statusCode == 200) {
+							upgradeChunk = JSON.parse(body)
+							allUpgradesLoading = allUpgradesLoading.concat(upgradeChunk);
+							loadedUpgradeRequestCount++;
+							if(loadedUpgradeRequestCount == upgradeIdStrings.length) {
+								allUpgrades = allUpgradesLoading;
+								loadedRequests = loadedRequests | 8;
+								useData();
+							}
+						}
+					});
+				}
 			}
 		}
 	});
@@ -330,7 +338,7 @@ function useData() {
 			storedData.motd = guildData.motd;
 			saveData();
 			if(storedData.settings["motdChannel"] != "" && guildObject.channels.has(storedData.settings["motdChannel"]) ) {
-				guildObject.channels[storedData.settings["motdChannel"]].sendMessage(storedData.motd)
+				guildObject.channels.get(storedData.settings["motdChannel"]).sendMessage(storedData.motd)
 			}
 		}
 		usingData = false;
