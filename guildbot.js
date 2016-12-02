@@ -56,7 +56,7 @@ function tableStringFromUpgradeList(upgradeList) {
 	var tableStringArray = []
 	var tableString = "```\n";
 	tableString += "Id   Name";
-	tableString += " ".repeat(42 - "Name".length);
+	tableString += " ".repeat(56 - "Name".length);
 	tableString += "Favor   ";
 	tableString += "Aetherium\n"
 	tableString += "-".repeat(64) + "\n";
@@ -74,7 +74,7 @@ function tableStringFromUpgradeList(upgradeList) {
 		}
 		tableString += (upgradeList[i]["id"]) + " ".repeat(5 - String(upgradeList[i]["id"]).length);
 		tableString += upgradeList[i]["name"];
-		tableString += " ".repeat(42 - upgradeList[i]["name"].length);
+		tableString += " ".repeat(56 - upgradeList[i]["name"].length);
 		tableString += favor;
 		tableString += " ".repeat(8 - String(favor).length);
 		tableString += aetherium;
