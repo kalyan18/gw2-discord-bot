@@ -432,9 +432,10 @@ bot.on("message", function(message) {
 				helpMessage += "!guild votes              to see the current voting results.\n";
 				helpMessage += "                          Only affordable upgrades are shown.\n\n";
 				helpMessage += "!guild motd               for the current Message of the Day.\n\n";
-				helpMessage += "!guild motdChannel        to automatically post new MotDs in the current channel.\n";
+				helpMessage += "!guild motdChannel        to automatically post MotDs in the current channel.\n";
 				helpMessage += "                          They will stop being posted in any previous channel.\n";
-				helpMessage += "                          If they are being posted in the current channel they will be disabled\n";
+				helpMessage += "                          If they are being posted in the current channel\n";
+				helpMessage += "                          they will be disabled.\n";
 				helpMessage += "```"
 				message.author.sendMessage(helpMessage)
 			} else if(message.content == "!guild motd") {
