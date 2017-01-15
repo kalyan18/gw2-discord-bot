@@ -11,8 +11,11 @@ const guildId = "AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA"; // Guild ID, obtained vi
 const botToken = "AaAAAaAaAAAaAaAAAaAAAaaAAAaaAaAAaaaaAAAAaaaaAaAAAAAAAAaaAaA";
 const serverId = "123456789012345678"; // ID of the discord server
 const guildMemberRoleString = "Guild Member"; // Name of role discord users need to have in order to use commands
+const botAdminId = "987654321098765432"; // ID of discord user managing the bot
 const upgradeReminderTargetIds = ["987654321098765432"]; // IDs of discord users to be notified of ready upgrades, leave empty for no notifications
-const dataFile = __dirname + "/guildData.json";
+const dataFileName = "guildData"
+
+const dataPath = __dirname + "/" + dataFileName + ".json";
 
 var bot = new Discord.Client();
 
@@ -23,7 +26,8 @@ var finishedUpgradeIds; // 2
 var treasuryItems = {}; // 4
 var allUpgrades = []; // 8
 
-var storedData = require(dataFile);
+var crashInfo;
+var storedData;
 //	{
 //	upgradeVotes: {userId: upgradeId}, 
 //	queuedUpgrade: {id: upgradeId, votes: voteNumber}, 
@@ -45,6 +49,7 @@ var winningUpgrades = [{id: -1, votes: -1}];
 var guildObject;
 var guildMemberRoleId;
 var upgradeReminderTargets = [];
+var botAdmin;
 
 var guildRequest = request.defaults({
 	headers: {"Authorization": "Bearer " + guildWarsApiKey},
@@ -95,11 +100,17 @@ function saveData() {
 		setTimeout(saveData, 1000*10)
 	} else {
 		writingData = true;
-		fs.writeFile( dataFile, JSON.stringify( storedData ), "utf8", function(err) {
+		fs.rename( dataPath, __dirname + "/" + dataFileName + "-backup.json", function(err) {
 			if(err) {
 				console.log(err);
 			} else {
-				writingData = false;
+				fs.writeFile( dataPath, JSON.stringify( storedData ), "utf8", function(err) {
+					if(err) {
+						console.log(err);
+					} else {
+						writingData = false;
+					}
+				});
 			}
 		});
 	}
@@ -450,15 +461,49 @@ bot.on('ready', () => {
 	startup();
 });
 
+bot.on('disconnected', () => {
+	bot.login(botToken);
+});
+
+
+function saveCrashInfo(callback) {
+	fs.writeFile( __dirname + "/" + dataFileName + "-crashInfo.json", JSON.stringify( crashInfo ), "utf8", callback );
+}
+
 function startup() {
 	if(bot.guilds.get(serverId)!=null) {
+		crashInfo = require(__dirname + "/" + dataFileName + "-crashInfo.json");
 		guildObject = bot.guilds.get(serverId);
 		guildMemberRoleId = guildObject.roles.find("name", guildMemberRoleString).id;
 		for(var targetIndex in upgradeReminderTargetIds) {
 			upgradeReminderTargets.push( bot.resolver.resolveUser(upgradeReminderTargetIds[targetIndex]) );
 		}
-	    loadData();
-		setInterval(loadData, 1000*60*2); 
+		botAdmin = bot.resolver.resolveUser(botAdminId);
+		if( bot.readyTimestamp - crashInfo["lastReady"] < 10000 ) {
+			crashInfo["fastCrashes"] = crashInfo["fastCrashes"] + 1;
+		}
+		if( crashInfo["fastCrashes"] >= 5 ) {
+			var date = new Date();
+			botAdmin.sendMessage( "Problem Time! – " + date.toLocaleTimeString() );
+			bot.user.setPresence({"status": "dnd", "afk": true, "game": {"name": "x_x"}});
+			saveCrashInfo( function(err) {
+				if(err) {
+					console.log(err);
+				}
+			});
+		} else {
+			crashInfo["lastReady"] = bot.readyTimestamp;
+			saveCrashInfo( function(err) {
+				if(err) {
+					console.log(err);
+				} else {
+					storedData = require(dataPath);
+					loadData();
+					bot.user.setPresence({"status": "online", "afk": false, "game": {"name": "!guild help"}});
+					setInterval(loadData, 1000*60*2);
+				}
+			});
+		}
 	} else {
 		setTimeout(startup, 1000*30)
 	}
@@ -467,8 +512,8 @@ function startup() {
 bot.on('error', e => { console.error(e); });
 
 process.on('unhandledRejection', (reason, p) => {
-  console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
-  // application specific logging, throwing an error, or other logic here
+	console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
+	// application specific logging, throwing an error, or other logic here
 });
 
 
