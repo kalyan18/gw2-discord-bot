@@ -484,11 +484,11 @@ function startup() {
 			upgradeReminderTargets.push( bot.resolver.resolveUser(upgradeReminderTargetIds[targetIndex]) );
 		}
 		botAdmin = bot.resolver.resolveUser(botAdminId);
-		if( bot.readyTimestamp - crashInfo["lastReady"] < 10000 ) {
+		var date = new Date();
+		if( date.now - crashInfo["lastReady"] < 10000 ) {
 			crashInfo["fastCrashes"] = crashInfo["fastCrashes"] + 1;
 		}
 		if( crashInfo["fastCrashes"] >= 5 ) {
-			var date = new Date();
 			botAdmin.sendMessage( "Problem Time! – " + date.toLocaleTimeString() );
 			bot.user.setPresence({"status": "dnd", "afk": true, "game": {"name": "x_x"}});
 			saveCrashInfo( function(err) {
@@ -497,7 +497,7 @@ function startup() {
 				}
 			});
 		} else {
-			crashInfo["lastReady"] = bot.readyTimestamp;
+			crashInfo["lastReady"] = date.now;
 			saveCrashInfo( function(err) {
 				if(err) {
 					console.log(err);
