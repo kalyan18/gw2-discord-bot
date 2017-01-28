@@ -19,6 +19,7 @@ const dataPath = __dirname + "/" + dataFileName + ".json";
 
 var bot = new Discord.Client();
 
+var botIsDown = false;
 var loadedRequests = 0;
 // Variables which data is initially loaded into
 var guildData; // 1
@@ -85,8 +86,9 @@ function tableStringFromUpgradeList(upgradeList) {
 		tableString += aetherium;
 		tableString += "\n"
 		if(tableString.length > 1900) {
+			tableString += "```"
 			tableStringArray.push(tableString);
-			tableString = "";
+			tableString = "```";
 		}
 	}
 	tableString += "```";
@@ -365,7 +367,9 @@ function useData() {
 
 bot.on("message", function(message) {
 	if( message.content.startsWith("!guild") && message.author != bot.user && (message.channel.type != "text" || message.channel.permissionsFor(bot.user).hasPermission("SEND_MESSAGES") ) ) {
-		if( guildObject.member(message.author)!=null && guildObject.member(message.author).roles.has(guildMemberRoleId) ) {
+		if(botIsDown) {
+			message.channel.sendMessage("*Currently not in any capacity to reply* :mask:")
+		} else if( guildObject.member(message.author)!=null && guildObject.member(message.author).roles.has(guildMemberRoleId) ) {
 			if(message.content == "!guild favor") {
 				message.channel.sendMessage("Current Favor: **" + guildData["favor"] + "** of 6000");
 			} else if(message.content == "!guild aetherium") {
@@ -484,11 +488,12 @@ function startup() {
 			upgradeReminderTargets.push( bot.resolver.resolveUser(upgradeReminderTargetIds[targetIndex]) );
 		}
 		botAdmin = bot.resolver.resolveUser(botAdminId);
-		var date = new Date();
-		if( date.now - crashInfo["lastReady"] < 10000 ) {
+		if( Date.now() - crashInfo["lastReady"] < 10000 ) {
 			crashInfo["fastCrashes"] = crashInfo["fastCrashes"] + 1;
 		}
 		if( crashInfo["fastCrashes"] >= 5 ) {
+			botIsDown = true;
+			var date = new Date();
 			botAdmin.sendMessage( "Problem Time! – " + date.toLocaleTimeString() );
 			bot.user.setPresence({"status": "dnd", "afk": true, "game": {"name": "x_x"}});
 			saveCrashInfo( function(err) {
@@ -497,7 +502,8 @@ function startup() {
 				}
 			});
 		} else {
-			crashInfo["lastReady"] = date.now;
+			botIsDown = false;
+			crashInfo["lastReady"] = Date.now();
 			saveCrashInfo( function(err) {
 				if(err) {
 					console.log(err);
