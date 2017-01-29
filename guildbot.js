@@ -65,8 +65,13 @@ function tableStringFromUpgradeList(upgradeList) {
 	tableString += " ".repeat(56 - "Name".length);
 	tableString += "Favor   ";
 	tableString += "Aetherium\n"
-	tableString += "-".repeat(64) + "\n";
+	tableString += "-".repeat(78) + "\n";
 	for (var i = 0; i < upgradeList.length; i++) {
+		if(tableString.length > 1900) {
+			tableString += "```"
+			tableStringArray.push(tableString);
+			tableString = "```";
+		}
 		var favor = 0;
 		var aetherium = 0;
 		for (var j = 0; j < upgradeList[i]["costs"].length; j++) {
@@ -85,11 +90,6 @@ function tableStringFromUpgradeList(upgradeList) {
 		tableString += " ".repeat(8 - String(favor).length);
 		tableString += aetherium;
 		tableString += "\n"
-		if(tableString.length > 1900) {
-			tableString += "```"
-			tableStringArray.push(tableString);
-			tableString = "```";
-		}
 	}
 	tableString += "```";
 	tableStringArray.push(tableString);
