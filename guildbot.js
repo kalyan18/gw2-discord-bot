@@ -342,9 +342,17 @@ function useData() {
 				}
 			}
 		}
+		function compareUpgrades(upgradeObjectLeft, upgradeObjectRight) {
+			return upgradeObjectLeft["id"] - upgradeObjectRight["id"];
+		}
 		affordableUpgrades = affordableUpgradesLoading;
 		expensiveUpgrades = expensiveUpgradesLoading;
 		availableUpgrades = affordableUpgrades.concat(expensiveUpgrades);
+
+		affordableUpgrades.sort(compareUpgrades);
+		expensiveUpgrades.sort(compareUpgrades);
+		availableUpgrades.sort(compareUpgrades);
+
 		for (var i = 0; i < affordableUpgrades.length; i++) {
 			affordableUpgradeIds.push(affordableUpgrades[i]["id"]);
 		}
@@ -490,6 +498,8 @@ function startup() {
 		botAdmin = bot.resolver.resolveUser(botAdminId);
 		if( Date.now() - crashInfo["lastReady"] < 10000 ) {
 			crashInfo["fastCrashes"] = crashInfo["fastCrashes"] + 1;
+		} else if( crashInfo["fastCrashes"] > 0 ) {
+			crashInfo["fastCrashes"] = crashInfo["fastCrashes"] - 1;
 		}
 		if( crashInfo["fastCrashes"] >= 5 ) {
 			botIsDown = true;
