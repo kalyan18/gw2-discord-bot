@@ -479,6 +479,8 @@ bot.on('ready', () => {
 });
 
 bot.on('disconnected', () => {
+	var date = new Date();
+	console.log( "Disconnected, trying to reconnect – " + date.toLocaleTimeString() );
 	bot.login(botToken);
 });
 
@@ -489,6 +491,8 @@ function saveCrashInfo(callback) {
 
 function startup() {
 	if(bot.guilds.get(serverId)!=null) {
+		var date = new Date();
+		console.log( "Starting up – " + date.toLocaleTimeString() );
 		crashInfo = require(__dirname + "/" + dataFileName + "-crashInfo.json");
 		guildObject = bot.guilds.get(serverId);
 		guildMemberRoleId = guildObject.roles.find("name", guildMemberRoleString).id;
@@ -503,7 +507,7 @@ function startup() {
 		}
 		if( crashInfo["fastCrashes"] >= 5 ) {
 			botIsDown = true;
-			var date = new Date();
+			date = new Date();
 			botAdmin.sendMessage( "Problem Time! – " + date.toLocaleTimeString() );
 			bot.user.setPresence({"status": "dnd", "afk": true, "game": {"name": "x_x"}});
 			saveCrashInfo( function(err) {
