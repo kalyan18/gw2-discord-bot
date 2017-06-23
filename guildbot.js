@@ -52,6 +52,9 @@ var guildMemberRoleId;
 var upgradeReminderTargets = [];
 var botAdmin;
 
+var motdTimer = 0; // Time since last MotD post in seconds
+var motdInterval = 60*60*2 // Time inbetween MotD posts in seconds
+
 var guildRequest = request.defaults({
 	headers: {"Authorization": "Bearer " + guildWarsApiKey},
 	baseUrl: "https://api.guildwars2.com/v2/"
@@ -362,7 +365,7 @@ function useData() {
 		affordableUpgradesTableStringArray = tableStringFromUpgradeList(affordableUpgrades);
 		expensiveUpgradesTableStringArray = tableStringFromUpgradeList(expensiveUpgrades);
 		checkVotedUpgrade();
-		if(guildData.motd != storedData.motd) {
+		if(guildData.motd != storedData.motd && motdTimer > motdInterval) {
 			storedData.motd = guildData.motd;
 			if(storedData.settings["motdChannel"] != "" && guildObject.channels.has(storedData.settings["motdChannel"]) ) {
 				guildObject.channels.get(storedData.settings["motdChannel"]).sendMessage(storedData.motd)
@@ -526,6 +529,7 @@ function startup() {
 					loadData();
 					bot.user.setPresence({"status": "online", "afk": false, "game": {"name": "!guild help"}});
 					setInterval(loadData, 1000*60*2);
+					setInterval(function(){ motdTimer++; }, 1000)
 				}
 			});
 		}
