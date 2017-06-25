@@ -366,6 +366,7 @@ function useData() {
 		expensiveUpgradesTableStringArray = tableStringFromUpgradeList(expensiveUpgrades);
 		checkVotedUpgrade();
 		if(guildData.motd != storedData.motd && motdTimer > motdInterval) {
+			motdTimer = 0;
 			storedData.motd = guildData.motd;
 			if(storedData.settings["motdChannel"] != "" && guildObject.channels.has(storedData.settings["motdChannel"]) ) {
 				guildObject.channels.get(storedData.settings["motdChannel"]).sendMessage(storedData.motd)
