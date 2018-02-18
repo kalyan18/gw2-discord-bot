@@ -395,6 +395,11 @@ bot.on("message", function(message) {
 				for(var stringIndex in expensiveUpgradesTableStringArray) {
 					message.channel.sendMessage(expensiveUpgradesTableStringArray[stringIndex]);
 				}
+			} else if(message.content.startsWith("!guild upgrades aff")) {
+				message.channel.sendMessage("```Affordable Upgrades:```");
+				for(var stringIndex in affordableUpgradesTableStringArray) {
+					message.channel.sendMessage(affordableUpgradesTableStringArray[stringIndex]);
+				}
 			} else if(message.content.startsWith("!guild upgrade ")) {
 				var upgradeId = Number( message.content.match(/[0-9]{1,6}$/) );
 				var upgrade = upgradeForId(upgradeId);
@@ -441,6 +446,7 @@ bot.on("message", function(message) {
 				helpMessage += "!guild aetherium          for the current aetherium amount.\n\n";
 				helpMessage += "!guild upgrades           for all available upgrades affordable\n";
 				helpMessage += "                          with the items in the treasury.\n\n";
+				helpMessage += "!guild upgrades afford    For all upgrades that can be immmediatly bought.\n\n";
 				helpMessage += "!guild upgrade upgradeId  for a list of items needed for the upgrade.\n\n";
 				helpMessage += "!guild vote upgradeId     to vote for the upgrade with the given id.\n";
 				helpMessage += "                          Refer to !guild upgrades for ids.\n\n";
